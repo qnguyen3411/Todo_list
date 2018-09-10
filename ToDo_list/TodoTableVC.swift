@@ -7,15 +7,27 @@
 //
 
 import UIKit
+import CoreData
+
 
 class TodoTableVC: UITableViewController {
 
+    
+    let context = (UIApplication.shared.delegate as! AppDelegate)
+        .persistentContainer.viewContext
+    
+    var items:[TodoItem] = []
+    
+    override func viewWillAppear(_ animated: Bool) {
+        fetchAllItems()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.tableView.rowHeight = UITableViewAutomaticDimension
-        self.tableView.estimatedRowHeight = 150
+        tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.estimatedRowHeight = 50
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -25,22 +37,53 @@ class TodoTableVC: UITableViewController {
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return 5
+        return items.count
     }
     
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> TodoCell {
+    override func tableView(_ tableView: UITableView,
+                            cellForRowAt indexPath: IndexPath) -> TodoCell {
+        
         let cell = tableView.dequeueReusableCell(
             withIdentifier: "TodoCell", for: indexPath) as! TodoCell
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        
+        let item = items[indexPath.row]
+        cell.titleLabel.text = item.title
+        cell.descLabel.text = item.desc
+        if let dueDate = item.dueDate {
+            cell.dateLabel.text = formatter.string(from: dueDate)
+        }
+        cell.drawCheckmark(if: item.isDone)
         return cell
     }
     
-//    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-//        print(tableView.cellForRow(at: indexPath))
-//        if let cell = tableView.cellForRow(at: indexPath) as? TodoCell {
-//            print(cell)
-//            return cell.heightNeeded()
-//        }
-//        return 50.0
-//    }
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let item = items[indexPath.row]
+        item.isDone = true
+        do {
+            try context.save()
+        } catch {
+            print("\(error)")
+        }
+        
+        tableView.reloadData()
+    }
+    
+    func fetchAllItems() {
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "TodoItem")
+        do {
+            let results = try context.fetch(request)
+            items = results as! [TodoItem]
+        } catch {
+            print("\(error)")
+        }
+        
+    }
+    
+    
+    
 
 }

@@ -31,5 +31,12 @@ class TodoCell: UITableViewCell {
     func heightNeeded() -> CGFloat {
         return 150.0
     }
-
+    
+    func drawCheckmark(if todoIsDone: Bool) {
+        if todoIsDone {
+            self.accessoryType = .checkmark
+        } else {
+            self.accessoryType = .none
+        }
+    }
 }
